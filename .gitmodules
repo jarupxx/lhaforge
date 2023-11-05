@@ -7,5 +7,5 @@
 	url = https://github.com/brofield/simpleini.git
 [submodule "dependency/backends"]
 	path = dependency/backends
-	url = https://github.com/Claybird/lhaforge_dependencies.git
+	url = https://github.com/jarupxx/lhaforge_dependencies.git
 	branch = master
