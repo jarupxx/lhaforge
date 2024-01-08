@@ -95,6 +95,18 @@ TEST(CommonUtil, LF_get_output_dir) {
 	output_dir_callback.setArchivePath(L"C:/path_to/test_archive.ext");
 	auto outputDir = LF_get_output_dir(OUTPUT_TO::SameDir, L"C:/path_to/test_archive.ext", L"", output_dir_callback);
 	EXPECT_EQ(L"C:/path_to", outputDir);
+
+	outputDir = LF_get_output_dir(OUTPUT_TO::AlwaysAsk, L"C:/path_to/test_archive.ext", L"", output_dir_callback);
+	EXPECT_EQ(L"C:/path_to", outputDir);
+
+	outputDir = LF_get_output_dir(OUTPUT_TO::Desktop, L"C:/path_to/test_archive.ext", L"", output_dir_callback);
+	EXPECT_EQ(UtilGetDesktopPath(), outputDir);
+
+	outputDir = LF_get_output_dir(OUTPUT_TO::SpecificDir, L"C:/path_to/test_archive.ext", L"Z:/path", output_dir_callback);
+	EXPECT_EQ(L"Z:/path", outputDir);
+
+	outputDir = LF_get_output_dir(OUTPUT_TO::SpecificDir, L"C:/path_to/test_archive.ext", L"", output_dir_callback);
+	EXPECT_EQ(UtilGetDesktopPath(), outputDir);
 }
 #endif
 
@@ -517,7 +529,7 @@ void CLFProgressHandlerGUI::onNextEntry(const std::filesystem::path& entry_path,
 			archivePath,
 			idxEntry,
 			numEntries,
-			entry_path,
+			entry_path.lexically_normal(),
 			entry_size);
 		while (UtilDoMessageLoop())continue;
 		if (dlg->isAborted()) {
@@ -574,5 +586,83 @@ void CLFScanProgressHandlerGUI::onNextEntry(const std::filesystem::path& entry_p
 		if (dlg->isAborted()) {
 			CANCEL_EXCEPTION();
 		}
+	}
+}
+
+
+#include "Dialogs/ConfirmOverwriteDlg.h"
+overwrite_options CLFOverwriteConfirmGUI::operator()(const std::filesystem::path& pathToWrite, const LF_ENTRY_STAT* entry)
+{
+	if (std::filesystem::exists(pathToWrite)
+		&& std::filesystem::is_regular_file(pathToWrite)) {
+		if (defaultDecision == overwrite_options::not_defined) {
+			//file exists. overwrite?
+
+			//existing file
+			LF_ENTRY_STAT existing;
+			existing.read_stat(pathToWrite, pathToWrite);
+			CConfirmOverwriteDialog dlg;
+			dlg.SetFileInfo(
+				entry->path, entry->stat.st_size, entry->stat.st_mtime,
+				existing.path, existing.stat.st_size, existing.stat.st_mtime
+			);
+			auto ret = dlg.DoModal();
+			switch (ret) {
+			case IDC_BUTTON_EXTRACT_OVERWRITE:
+				return overwrite_options::overwrite;
+			case IDC_BUTTON_EXTRACT_OVERWRITE_ALL:
+				defaultDecision = overwrite_options::overwrite;
+				return overwrite_options::overwrite;
+			case IDC_BUTTON_EXTRACT_SKIP:
+				return overwrite_options::skip;
+			case IDC_BUTTON_EXTRACT_SKIP_ALL:
+				defaultDecision = overwrite_options::skip;
+				return overwrite_options::skip;
+			case IDC_BUTTON_EXTRACT_ABORT:
+			default:
+				return overwrite_options::abort;
+			}
+		} else {
+			return defaultDecision;
+		}
+	} else {
+		return overwrite_options::overwrite;
+	}
+}
+
+
+#include "Dialogs/ConfirmOverwriteInArchiveDlg.h"
+overwrite_options CLFOverwriteInArchiveConfirmGUI::operator()(
+	const std::filesystem::path& new_entry_path,
+	const LF_ENTRY_STAT& existing_entry)
+{
+	if (defaultDecision == overwrite_options::not_defined) {
+		CConfirmOverwriteInArchiveDialog dlg;
+
+		LF_ENTRY_STAT new_entry;
+		new_entry.read_stat(new_entry_path, new_entry_path);
+
+		dlg.SetFileInfo(
+			new_entry_path, new_entry.stat.st_size, new_entry.stat.st_mtime,
+			existing_entry.path, existing_entry.stat.st_size, existing_entry.stat.st_mtime
+		);
+		auto ret = dlg.DoModal();
+		switch (ret) {
+		case IDC_BUTTON_EXTRACT_OVERWRITE:
+			return overwrite_options::overwrite;
+		case IDC_BUTTON_EXTRACT_OVERWRITE_ALL:
+			defaultDecision = overwrite_options::overwrite;
+			return overwrite_options::overwrite;
+		case IDC_BUTTON_EXTRACT_SKIP:
+			return overwrite_options::skip;
+		case IDC_BUTTON_EXTRACT_SKIP_ALL:
+			defaultDecision = overwrite_options::skip;
+			return overwrite_options::skip;
+		case IDC_BUTTON_EXTRACT_ABORT:
+		default:
+			return overwrite_options::abort;
+		}
+	} else {
+		return defaultDecision;
 	}
 }
