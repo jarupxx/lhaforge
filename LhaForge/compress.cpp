@@ -587,7 +587,7 @@ void compressOneArchive(
 	const LF_COMPRESS_ARGS& args,
 	const std::filesystem::path& output_archive,
 	const COMPRESS_SOURCES &source_files,
-	ARCLOG arcLog,
+	ARCLOG &arcLog,
 	ILFProgressHandler &progressHandler,
 	std::shared_ptr<ILFPassphrase> passphrase_callback
 ) {
@@ -599,9 +599,9 @@ void compressOneArchive(
 		try {
 			LF_ENTRY_STAT entry;
 			entry.read_stat(source.originalFullPath, source.entryPath);
-			progressHandler.onNextEntry(source.originalFullPath, entry.stat.st_size);
 
 			if (std::filesystem::is_regular_file(source.originalFullPath)) {
+				progressHandler.onNextEntry(source.originalFullPath, entry.stat.st_size);
 				RAW_FILE_READER provider;
 				provider.open(source.originalFullPath);
 				uint64_t size = 0;
@@ -618,30 +618,32 @@ void compressOneArchive(
 				});
 
 				progressHandler.onEntryIO(entry.stat.st_size);
+				arcLog(source.originalFullPath, UtilLoadString(IDS_ARCLOG_OK));
 			} else {
 				//directory
 				progressHandler.onNextEntry(source.originalFullPath, 0);
 				archive.add_directory_entry(entry);
+				arcLog(source.originalFullPath, UtilLoadString(IDS_ARCLOG_OK));
 			}
-			arcLog(output_archive, L"OK");
 		} catch (const LF_USER_CANCEL_EXCEPTION& e) {	//need this to know that user cancel
-			arcLog(output_archive, e.what());
+			arcLog.logException(e);
 			archive.close();
 			UtilDeletePath(output_archive);
 			throw;
 		} catch (const LF_EXCEPTION& e) {
-			arcLog(output_archive, e.what());
+			arcLog.logException(e);
 			archive.close();
 			UtilDeletePath(output_archive);
 			throw;
 		} catch (const std::filesystem::filesystem_error& e) {
 			auto msg = UtilUTF8toUNICODE(e.what(), strlen(e.what()));
-			arcLog(output_archive, msg);
+			arcLog.logException(LF_EXCEPTION(msg));
 			archive.close();
 			UtilDeletePath(output_archive);
 			throw LF_EXCEPTION(msg);
 		}
 	}
+	arcLog(output_archive, UtilLoadString(IDS_ARCLOG_OK));
 }
 
 #ifdef UNIT_TEST
@@ -840,15 +842,25 @@ void compress_helper(
 		}
 	}
 
+	progressHandler.setArchive(archivePath);
+	arcLog.setArchivePath(archivePath);
+
 	//limit concurrent compressions
 	CSemaphoreLocker SemaphoreLock;
 	if (args.compress.LimitCompressFileCount) {
 		const wchar_t* LHAFORGE_COMPRESS_SEMAPHORE_NAME = L"LhaForgeCompressLimitSemaphore";
-		SemaphoreLock.Lock(LHAFORGE_COMPRESS_SEMAPHORE_NAME, args.compress.MaxCompressFileCount);
+		SemaphoreLock.Create(LHAFORGE_COMPRESS_SEMAPHORE_NAME, args.compress.MaxCompressFileCount);
+		//Wait for semaphore lock
+		//progress dialog shows waiting message
+		progressHandler.setSpecialMessage(UtilLoadString(IDS_WAITING_FOR_SEMAPHORE));
+		for (; !SemaphoreLock.Lock(20);) {
+			while (UtilDoMessageLoop())continue;
+			progressHandler.poll();	//needed to detect cancel
+			Sleep(20);
+		}
 	}
 
 	//do compression
-	arcLog.setArchivePath(archivePath);
 	compressOneArchive(
 		format,
 		options,
@@ -864,15 +876,15 @@ void compress_helper(
 
 	//open output directory
 	if (args.compress.OpenDir) {
-		auto pathOpenDir = std::filesystem::path(archivePath).parent_path();
 		if (args.general.Filer.UseFiler) {
+			auto pathOpenDir = std::filesystem::path(archivePath).parent_path();
 			auto envInfo = LF_make_expand_information(pathOpenDir.c_str(), archivePath.c_str());
 
 			auto strCmd = UtilExpandTemplateString(args.general.Filer.FilerPath, envInfo);
 			auto strParam = UtilExpandTemplateString(args.general.Filer.Param, envInfo);
 			ShellExecuteW(nullptr, L"open", strCmd.c_str(), strParam.c_str(), nullptr, SW_SHOWNORMAL);
 		} else {
-			UtilNavigateDirectory(pathOpenDir);
+			UtilNavigateDirectory(archivePath);
 		}
 	}
 
@@ -926,13 +938,9 @@ bool GUI_compress_multiple_files(
 					progressHandler,
 					std::make_shared<CLFPassphraseGUI>()
 				);
-			} catch (const LF_USER_CANCEL_EXCEPTION& e) {
-				ARCLOG &arcLog = logs.back();
-				arcLog.logException(e);
+			} catch (const LF_USER_CANCEL_EXCEPTION&) {
 				break;
-			} catch (const LF_EXCEPTION& e) {
-				ARCLOG &arcLog = logs.back();
-				arcLog.logException(e);
+			} catch (const LF_EXCEPTION&) {
 				continue;
 			}
 		}
@@ -950,9 +958,7 @@ bool GUI_compress_multiple_files(
 				progressHandler,
 				std::make_shared<CLFPassphraseGUI>()
 			);
-		} catch (const LF_EXCEPTION &e) {
-			ARCLOG &arcLog = logs.back();
-			arcLog.logException(e);
+		} catch (const LF_EXCEPTION &) {
 		}
 	}
 	progressHandler.end();
@@ -975,7 +981,7 @@ bool GUI_compress_multiple_files(
 	}
 
 	if (displayLog) {
-		CLogListDialog LogDlg(UtilLoadString(IDS_LOGINFO_OPERATION_EXTRACT).c_str());
+		CLogListDialog LogDlg(UtilLoadString(IDS_LOGINFO_OPERATION_COMPRESS).c_str());
 		LogDlg.SetLogArray(logs);
 		LogDlg.DoModal(::GetDesktopWindow());
 	}
@@ -1051,8 +1057,17 @@ TEST(compress, get_archive_format_args)
 
 //----
 
-#ifdef UNIT_TEST
+void RAW_FILE_READER::open(const std::filesystem::path& path)
+{
+	close();
+	fp.open(path, L"rb");
+	if (!fp.is_opened()) {
+		RAISE_EXCEPTION(UtilLoadString(IDS_ERROR_OPEN_FILE), path.wstring().c_str());
+	}
+}
 
+
+#ifdef UNIT_TEST
 
 #pragma comment(lib,"Bcrypt.lib")
 TEST(compress, RAW_FILE_READER)

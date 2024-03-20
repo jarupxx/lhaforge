@@ -80,10 +80,10 @@ protected:
 
 		//directory icons
 		//-close
-		SHFILEINFO shfi;
+		SHFILEINFO shfi = {};
 		SHGetFileInfoW(L"dummy", FILE_ATTRIBUTE_DIRECTORY, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_ICON | SHGFI_SMALLICON);
 		m_ImageList.AddIcon(shfi.hIcon);
-		DestroyIcon(shfi.hIcon);
+		if (shfi.hIcon)DestroyIcon(shfi.hIcon);
 		//-open
 		SHGetFileInfoW(L"dummy", FILE_ATTRIBUTE_DIRECTORY, &shfi, sizeof(shfi), SHGFI_USEFILEATTRIBUTES | SHGFI_ICON | SHGFI_SMALLICON | SHGFI_OPENICON);
 		m_ImageList.AddIcon(shfi.hIcon);
@@ -220,7 +220,7 @@ public:
 			//---root
 			//archive file icon
 			m_ImageList.Remove(archiveIconIndex);	//remove old icon
-			SHFILEINFO shfi;
+			SHFILEINFO shfi = {};
 			::SHGetFileInfoW(mr_Model.GetArchiveFileName().c_str(),
 				0, &shfi, sizeof(shfi), SHGFI_ICON | SHGFI_SMALLICON);
 			m_ImageList.AddIcon(shfi.hIcon);
@@ -279,7 +279,7 @@ public:
 				return false;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	//dropped

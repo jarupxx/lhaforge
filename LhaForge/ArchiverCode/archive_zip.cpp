@@ -147,7 +147,6 @@ int32_t mz_stream_LF_open(void* stream, const char* path_utf8, int32_t mode) {
 
 int32_t mz_stream_LF_read(void* stream, void* buf, int32_t size) {
 	mz_stream_LF* lff = (mz_stream_LF*)stream;
-	uint32_t read = 0;
 
 	if (mz_stream_LF_is_open(stream) != MZ_OK)return MZ_OPEN_ERROR;
 
@@ -207,8 +206,8 @@ void mz_stream_LF_delete(void** stream) {
 	if (stream) {
 		mz_stream_LF* lff = (mz_stream_LF*)*stream;
 		if (lff)delete lff;
+		*stream = NULL;
 	}
-	*stream = NULL;
 }
 
 struct CLFArchiveZIP::INTERNAL {
@@ -268,7 +267,7 @@ struct CLFArchiveZIP::INTERNAL {
 			RAISE_EXCEPTION(mzError2Text(err));
 		}
 		{
-			auto methodStr = toLower(param["method"]);
+			auto methodStr = toLower(param["compression"]);
 			if (methodStr.empty()) {
 				methodStr = "deflate";
 			}
@@ -434,7 +433,7 @@ std::unique_ptr<ILFArchiveFile> CLFArchiveZIP::make_copy_archive(
 							break;
 						} else {
 							int32_t offset = 0;
-							for (;;) {
+							for (; offset < bytes_read;) {
 								auto bytes_written = mz_zip_entry_write(dest->_internal->zip, &buffer[offset], bytes_read - offset);
 								if (bytes_written < 0) {
 									RAISE_EXCEPTION(mzError2Text(bytes_written));
@@ -1418,7 +1417,7 @@ TEST(CLFArchiveZIP, add_file_entry_methods_and_levels)
 				CLFArchiveZIP a;
 				LF_COMPRESS_ARGS args;
 				args.load(CConfigFile());
-				args.formats.zip.params["method"] = method.first;
+				args.formats.zip.params["compression"] = method.first;
 				args.formats.zip.params["level"] = UtilToUTF8(Format(L"%d", level));
 				auto pp = std::make_shared<CLFPassphraseNULL>();
 				a.write_open(temp, LF_ARCHIVE_FORMAT::ZIP, LF_WOPT_STANDARD, args, pp);

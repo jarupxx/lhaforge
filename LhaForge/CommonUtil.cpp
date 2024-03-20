@@ -186,7 +186,7 @@ void LF_ask_and_make_sure_output_dir_exists(const std::filesystem::path& outputD
 			try {
 				std::filesystem::create_directories(outputDir);
 			} catch (const std::filesystem::filesystem_error) {
-				RAISE_EXCEPTION(UtilLoadString(IDS_ERROR_CANNOT_MAKE_DIR), outputDir.c_str());
+				RAISE_EXCEPTION(UtilLoadString(IDS_ERROR_MKDIR), outputDir.c_str());
 			}
 			break;
 		default://treat as error
@@ -521,6 +521,20 @@ void CLFProgressHandlerGUI::end()
 	}
 }
 
+void CLFProgressHandlerGUI::setArchive(const std::filesystem::path& path)
+{
+	__super::setArchive(path);
+	if (dlg) {
+		dlg->SetEntry(
+			archivePath,
+			0,
+			0,
+			L"",
+			0);
+		while (UtilDoMessageLoop())continue;
+	}
+}
+
 void CLFProgressHandlerGUI::onNextEntry(const std::filesystem::path& entry_path, int64_t entry_size)
 {
 	idxEntry++;
@@ -535,6 +549,10 @@ void CLFProgressHandlerGUI::onNextEntry(const std::filesystem::path& entry_path,
 		if (dlg->isAborted()) {
 			CANCEL_EXCEPTION();
 		}
+		while (dlg->isPaused()) {
+			UtilDoMessageLoop();
+			Sleep(100);
+		}
 	}
 }
 
@@ -546,6 +564,27 @@ void CLFProgressHandlerGUI::onEntryIO(int64_t current_size)
 		if (dlg->isAborted()) {
 			CANCEL_EXCEPTION();
 		}
+		while (dlg->isPaused()) {
+			UtilDoMessageLoop();
+			if (dlg->isAborted()) {
+				CANCEL_EXCEPTION();
+			}
+			Sleep(100);
+		}
+	}
+}
+
+void CLFProgressHandlerGUI::setSpecialMessage(const std::wstring& msg)
+{
+	if (dlg) {
+		dlg->SetSpecialMessage(msg);
+	}
+}
+
+void CLFProgressHandlerGUI::poll()
+{
+	if (dlg && dlg->isAborted()) {
+		CANCEL_EXCEPTION();
 	}
 }
 

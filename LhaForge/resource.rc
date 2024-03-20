@@ -44,14 +44,6 @@ BEGIN
         BOTTOMMARGIN, 258
     END
 
-    IDD_DIALOG_LOG, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 159
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 257
-    END
-
     IDD_PROPPAGE_CONFIG_COMPRESS_GENERAL, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -182,9 +174,9 @@ BEGIN
     IDD_DIALOG_PROGRESS, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 208
+        RIGHTMARGIN, 260
         TOPMARGIN, 7
-        BOTTOMMARGIN, 127
+        BOTTOMMARGIN, 106
     END
 
     IDD_DIALOG_FIND, DIALOG
@@ -257,14 +249,6 @@ BEGIN
     LTEXT           "空白でシステム設定に従う。次回実行時から有効",IDC_STATIC,158,221,120,16
 END
 
-IDD_DIALOG_LOG DIALOG 0, 0, 166, 264
-STYLE DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
-CAPTION "LhaForgeログ - [Esc]キーで閉じられます"
-FONT 9, "ＭＳ Ｐゴシック"
-BEGIN
-    EDITTEXT        IDC_EDIT_LOG,7,7,152,250,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
-END
-
 IDD_PROPPAGE_CONFIG_COMPRESS_GENERAL DIALOGEX 0, 0, 326, 224
 STYLE DS_SETFONT | DS_CONTROL | WS_CHILD | WS_CAPTION
 CAPTION "圧縮設定"
@@ -330,7 +314,7 @@ BEGIN
     LTEXT           "上限",IDC_STATIC,20,151,15,8
     EDITTEXT        IDC_EDIT_MAX_EXTRACT_FILECOUNT,39,149,34,14,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Spin1",IDC_SPIN_MAX_EXTRACT_FILECOUNT,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,64,149,9,14
-    CONTROL         "正常に解凍された圧縮ファイルを削除",IDC_CHECK_DELETE_ARCHIVE_AFTER_EXTRACT,
+    CONTROL         "正常に解凍されたアーカイブを削除",IDC_CHECK_DELETE_ARCHIVE_AFTER_EXTRACT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,168,136,10
     CONTROL         "ごみ箱に移動",IDC_CHECK_MOVETO_RECYCLE_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,181,60,10
     CONTROL         "確認ダイアログを出さない",IDC_CHECK_DELETE_NOCONFIRM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,193,98,10
@@ -468,11 +452,11 @@ BEGIN
     GROUPBOX        "閲覧のショートカット",IDC_STATIC,127,81,109,78
     PUSHBUTTON      "デスクトップに作成",IDC_BUTTON_CREATE_LIST_SHORTCUT_DESKTOP,142,93,78,14
     PUSHBUTTON      "「送る」メニューに作成",IDC_BUTTON_CREATE_LIST_SHORTCUT_SENDTO,142,113,78,14
-    LTEXT           "圧縮ファイルの内容を表示",IDC_STATIC,133,132,99,21
+    LTEXT           "アーカイブの内容を表示",IDC_STATIC,133,132,99,21
     GROUPBOX        "検査のショートカット",IDC_STATIC,7,168,109,78
     PUSHBUTTON      "デスクトップに作成",IDC_BUTTON_CREATE_TESTARCHIVE_SHORTCUT_DESKTOP,21,180,78,14
     PUSHBUTTON      "「送る」メニューに作成",IDC_BUTTON_CREATE_TESTARCHIVE_SHORTCUT_SENDTO,21,200,78,14
-    LTEXT           "圧縮ファイルの破損検査",IDC_STATIC,12,219,99,21
+    LTEXT           "アーカイブの破損検査",IDC_STATIC,12,219,99,21
 END
 
 IDD_PROPPAGE_CONFIG_FILELISTWINDOW DIALOGEX 0, 0, 307, 522
@@ -614,22 +598,23 @@ BEGIN
     CONTROL         "List1",IDC_LIST_LOGINFO_ITEMS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA | WS_BORDER | WS_TABSTOP,7,7,154,304,WS_EX_CLIENTEDGE
     LTEXT           "対象ファイル",IDC_STATIC_MOVABLE1,169,10,44,8
     EDITTEXT        IDC_EDIT_LOGINFO_FILE,213,7,202,14,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "処理内容:[内容]",IDC_STATIC_LOGINFO,169,26,246,8
-    LTEXT           "結果",IDC_STATIC_MOVABLE2,169,38,20,8
-    EDITTEXT        IDC_EDIT_LOGINFO_MSG,169,50,246,261,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | ES_WANTRETURN | WS_VSCROLL,WS_EX_CLIENTEDGE
+    LTEXT           "結果",IDC_STATIC_MOVABLE2,169,24,20,8
+    EDITTEXT        IDC_EDIT_LOGINFO_MSG,169,40,246,271,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | ES_WANTRETURN | WS_VSCROLL,WS_EX_CLIENTEDGE
 END
 
-IDD_DIALOG_PROGRESS DIALOGEX 0, 0, 215, 134
+IDD_DIALOG_PROGRESS DIALOGEX 0, 0, 267, 113
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 EXSTYLE WS_EX_WINDOWEDGE
 CAPTION "処理中 - LhaForge"
 FONT 9, "ＭＳ Ｐゴシック", 400, 0, 0x80
 BEGIN
-    LTEXT           "<file>",IDC_STATIC_FILEINFO,7,7,201,30,SS_NOPREFIX
-    CONTROL         "",IDC_PROGRESS_FILE,"msctls_progress32",PBS_SMOOTH | WS_BORDER,7,38,201,19
-    LTEXT           "<entry>",IDC_STATIC_ENTRY,7,57,201,31,SS_NOPREFIX
-    CONTROL         "",IDC_PROGRESS_ENTRY,"msctls_progress32",PBS_SMOOTH | WS_BORDER,7,91,201,19
-    PUSHBUTTON      "中断(&A)",IDC_BUTTON_ABORT,83,113,50,14
+    LTEXT           "<file>",IDC_STATIC_FILEINFO,7,7,253,13,SS_NOPREFIX | SS_PATHELLIPSIS
+    CONTROL         "",IDC_PROGRESS_FILE,"msctls_progress32",PBS_SMOOTH | WS_BORDER,7,17,253,19
+    LTEXT           "<entry>",IDC_STATIC_ENTRY,7,40,253,12,SS_NOPREFIX | SS_PATHELLIPSIS
+    CONTROL         "",IDC_PROGRESS_ENTRY,"msctls_progress32",PBS_SMOOTH | WS_BORDER,7,54,253,19
+    LTEXT           "<entry size>",IDC_STATIC_ENTRY_SIZE,177,73,83,12,SS_NOPREFIX | SS_PATHELLIPSIS,WS_EX_RIGHT
+    PUSHBUTTON      "一時停止(&P)",IDC_BUTTON_PAUSE,78,92,50,14
+    PUSHBUTTON      "中断(&A)",IDC_BUTTON_ABORT,142,92,50,14
 END
 
 IDD_DIALOG_FIND DIALOGEX 0, 0, 310, 142
@@ -1095,6 +1080,11 @@ BEGIN
     0
 END
 
+IDD_DIALOG_LOGLIST AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1112,11 +1102,11 @@ BEGIN
                             "このショートカットを利用して圧縮を行う場合、\n・圧縮のたびに形式を選ぶ\nもしくは\n・ここであらかじめ圧縮形式を決めておく\nを選ぶことが出来ます。\nこのショートカットによる圧縮の形式をいま設定しておきますか？"
     IDS_COMPRESS_METHOD_STORE "無圧縮"
     IDS_COMPRESS_METHOD_BZIP2 "BZIP2"
-    IDS_ERROR_ACCESS_OUTPUT_FILE "出力先ファイル '%s' にアクセスできません。"
+    IDS_ERROR_PATH_EMPTY    "ファイルパスが空です"
     IDS_ERROR_CANNOT_EXECUTE "プログラム '%s' を実行できません。\n詳細情報:%s"
-    IDS_ERROR_CANNOT_MAKE_DIR "出力先フォルダ '%s' を作成できませんでした。"
-    IDS_ERROR_CANNOT_SET_CURRENT_DIR "フォルダ '%s' を出力用にセットできませんでした。"
-    IDS_ERROR_CANNOT_SPLIT_SFX "分割書庫の自己解凍は作成できません。自己解凍を無効にします。"
+    IDS_ARCLOG_OK           "OK"
+    IDS_ERROR_GET_FULLPATH  "フルパスの取得に失敗しました"
+    IDS_ARCLOG_MKDIR        "フォルダ作成"
     IDS_DENYEXT_DEFAULT     ".docx;.dotx;.xlsx;.xltx;.pptx;.potx;.ppsx;.sldx;.thmx;.odt;.ods;.odp;.odb;.odg;.odf;"
     IDS_NUM_EXTRA_FILES     "他%d個のファイル"
     IDS_ERROR_CREATE_SHORTCUT "ショートカットを作成できませんでした。"
@@ -1131,35 +1121,29 @@ BEGIN
     IDS_COMPRESS_LEVEL_DEFAULT "標準"
     IDS_ERROR_DND_FAILED    "ドラッグ&ドロップ操作に失敗しました。"
     IDS_ERROR_FAIL_GET_ABSPATH "ファイル名の取得に失敗しました。(絶対パス)"
-    IDS_ERROR_FAIL_GET_LONGNAME "ファイル名の取得に失敗しました。(ロングファイル名)"
+    IDS_ARCLOG_MKDIR_FAIL   "フォルダ作成に失敗"
     IDS_ERROR_FILE_NOT_FOUND "ファイル '%s' が見つかりません。"
     IDS_ERROR_FILE_NOT_SPECIFIED "処理可能なファイルが指定されていません。"
-    IDS_ERROR_FILE_REPLACE  "既存の圧縮ファイルを置き換えることができませんでした。\n詳細情報 : %s"
+    IDS_ERROR_FILE_REPLACE  "既存のアーカイブを置き換えることができませんでした。\n詳細情報 : %s"
     IDS_ERROR_FILELIST_DELETE_SELECTED_NOT_SUPPORTED 
                             "この形式ではアーカイブからファイルを削除することは出来ません。"
-    IDS_ERROR_FILELIST_EXTRACT_SELECTED_NOT_SUPPORTED 
-                            "この形式では選択したファイルのみを解凍する機能はサポートされていません。"
+    IDS_ARCLOG_SKIP         "スキップ"
     IDS_ERROR_FILELIST_NOT_SELECTED "ファイルが選択されていません。"
     IDS_ERROR_GET_DESKTOP   "デスクトップのパスを取得できません。"
-    IDS_ERROR_GET_FILE_INFO "ファイル '%s' の情報を取得できません。"
+    IDS_ARCLOG_ERROR_WRITE  "ファイルに書き込めません"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_GET_SENDTO    "「送る」フォルダのパスが取得できませんでした。"
+    IDS_ARCLOG_ENTRY_IS_DIR "エントリはフォルダ"
     IDS_ERROR_ILLEGAL_FORMAT_TYPE "圧縮形式として不正な形式が指定されました。"
-    IDS_ERROR_ILLEGAL_HANDLER 
-                            "ファイル '%s' を解凍できません。\n・適切な解凍DLLが見つからない\n・ファイルが壊れている\n・サポートされていない形式である\n・ファイル名に対応していない文字が含まれている\nのいずれかの可能性があります。最新版の解凍DLLを取得して試してください。"
+    IDS_ARCLOG_REMOVED      "削除"
     IDS_ERROR_INVALID_PARAMETER "'%s' は不正なオプションです"
-    IDS_ERROR_MAX_PATH      "ファイル名が最大長を超えました。出力先をより上位のフォルダに移動するか、ファイル名を短くしてください。"
-    IDS_ERROR_OPEN_ARCHIVE  "圧縮ファイル '%s' をスキャン出来ませんでした。"
-    IDS_ERROR_OUTPUT_DIR_NOT_SPECIFIED "出力先フォルダが指定されていません。"
+    IDS_ARCLOG_KEEP         "保持"
     IDS_ERROR_SAME_INPUT_AND_OUTPUT "'%s' は入力ファイルと同じ名前です。別の名前を指定してください。"
     IDS_COMPRESS_LEVEL_FASTEST "速度重視"
     IDS_COMPRESS_LEVEL_HIGH "圧縮率重視"
     IDS_ERROR_SINGLE_FILE_ONLY "この形式では複数のファイルを圧縮することは出来ません。"
-    IDS_ERROR_TEMPORARY_FILE_ACCESS "一時ファイルにアクセスできません。"
-    IDS_ERROR_TEMPORARY_FILE_CREATE "一時ファイルを作成できません。"
     IDS_COMPRESS_LEVEL_EVEN_HIGHER "さらに圧縮率重視"
     IDS_COMPRESS_LEVEL_ULTRA "最高圧縮率"
     IDS_COMPRESS_MULTI_THREAD "マルチスレッド処理"
@@ -1168,17 +1152,15 @@ END
 STRINGTABLE
 BEGIN
     IDS_MESSAGE_CAPTION     "LhaForge"
-    IDS_UNTITLED            "無題"
+    IDS_ERROR_UNKNOWN_FORMAT "不明/未対応のファイル形式"
     IDS_FORMAT_NAME_TAR_ZSTD "TAR+ZSTD"
-    IDS_ERROR_EXAMINEARCHIVE "圧縮ファイルの検査に失敗しました。"
-    IDS_ICON_FILE_NAME_DEFAULT "icons\\archive.ico"
+    IDS_ARCHIVE_IS_NOT_OPENED "アーカイブが開かれていません"
     IDS_ENTER_PASSPRASE     "パスワードを入力してください"
-    IDS_INPUT_TARGET_FOLDER "出力先フォルダを選択してください。"
+    IDS_ERROR_OPEN_FILE     "ファイル '%s'を開けません"
     IDS_LHAFORGE_VERSION_STRING "Beta"
     IDS_CONFIG_FORMAT_KEY   "項目"
-    IDS_COMPRESS_FILE       "圧縮ファイル"
-    IDS_CONFIRM_OVERWRITE_MESSAGE 
-                            "ファイル '%s'\r\n 既にディスク上に同名ファイルが存在します。\r\n ディスク上のファイル(更新日時 %d年%d月%d日、%d時%d分%d秒、サイズ%I64uバイト)を、圧縮ファイル中の同名ファイル(サイズ%dバイト)で置き換えますか?"
+    IDS_ERROR_WRITE_FILE    "ファイル '%s' に書き込めません"
+    IDS_ERROR_UNEXPECTED    "予期せぬエラー: %s"
     IDS_CONFIG_FORMAT_VALUE "値"
     IDS_SEARCH_BY_FILENAME  "ファイル名: %s"
     IDS_COMPRESS_METHOD     "圧縮メソッド"
@@ -1189,21 +1171,12 @@ STRINGTABLE
 BEGIN
     IDS_SHORTCUT_NAME_EXTRACT "LhaForgeで解凍"
     IDS_SHORTCUT_NAME_LIST  "LhaForgeで閲覧"
-    IDS_ERROR_CANT_COMPRESS_FOLDER "この形式ではフォルダを圧縮することは出来ません。"
     IDS_FILELIST_ITEMCOUNT  "%d 項目"
     IDS_FILELIST_SUBITEM    "フォルダ内項目数"
     IDS_FORMAT_NAME_ZSTD    "ZSTD"
     IDS_SHORTCUT_NAME_COMPRESS_EX_SINGLE "LhaForgeで%sに個別圧縮"
-    IDS_TESTARCHIVE_UNAVAILABLE 
-                            "ファイル '%s' は '%s' が扱えるファイルのようですが、このDLLではアーカイブの完全性チェックを行うことは出来ません。"
-    IDS_TESTARCHIVE_WITH_CHECKARCHIVE 
-                            "ファイル '%s':\r\n'%s' の CheckArchive() APIを使ってチェックします。"
-    IDS_TESTARCHIVE_RESULT_OK "OK:ファイルは正常であると報告されました。"
-    IDS_TESTARCHIVE_RESULT_NG "Error!:ファイルに異常があると報告されました。"
-    IDS_ERROR_CANT_TEST_FOLDER 
-                            "テストするよう指示された '%s' はフォルダです。処理を行うことは出来ません。スキップします。"
     IDS_SHORTCUT_NAME_TESTARCHIVE "LhaForgeで検査"
-    IDS_SHORTCUT_DESCRIPTION_TESTARCHIVE "圧縮ファイルを検査します。"
+    IDS_SHORTCUT_DESCRIPTION_TESTARCHIVE "アーカイブを検査します。"
 END
 
 STRINGTABLE
@@ -1218,8 +1191,8 @@ BEGIN
     IDS_PANE_ITEMCOUNT_INITIAL "000000個のアイテム(うち000000個を選択)"
     IDS_SHORTCUT_DESCRIPTION_AUTOMATIC "ファイルの圧縮/解凍を自動的に判定します。"
     IDS_SHORTCUT_DESCRIPTION_COMPRESS "ファイルを圧縮します。"
-    IDS_SHORTCUT_DESCRIPTION_EXTRACT "圧縮ファイルを解凍します。"
-    IDS_SHORTCUT_DESCRIPTION_LIST "圧縮ファイルを閲覧します。"
+    IDS_SHORTCUT_DESCRIPTION_EXTRACT "アーカイブを解凍します。"
+    IDS_SHORTCUT_DESCRIPTION_LIST "アーカイブを閲覧します。"
     IDS_SHORTCUT_NAME_AUTOMATIC "LhaForgeで処理"
     IDS_SHORTCUT_NAME_COMPRESS "LhaForgeで圧縮"
     IDS_SHORTCUT_NAME_COMPRESS_EX "LhaForgeで%sに圧縮"
@@ -1228,17 +1201,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_COMPRESS_MT_ALL_CORES "有効"
-    IDS_FILELIST_SEARCH     "ファイル構造を調べています..."
-    IDS_FILELIST_COLUMN_ATTRIBUTE "属性"
     IDS_FILELIST_COLUMN_FILENAME "ファイル名"
     IDS_FILELIST_COLUMN_ORIGINALSIZE "元サイズ"
     IDS_FILELIST_COLUMN_FILETIME "更新日時"
     IDS_FILELIST_COLUMN_FULLPATH "格納パス"
     IDS_FILELIST_COLUMN_TYPENAME "ファイル種別"
-    IDS_FILELIST_FILETIME_FORMAT "%04d/%02d/%02d %02d:%02d:%02d"
     IDS_COMPRESS_MT_SINGLE_THREAD "無効"
-    IDS_FILELIST_FORMAT_UNKNOWN 
-                            "ファイル '%s' を閲覧できません。\n・適切な解凍DLLが見つからない\n・ファイルが壊れている\n・サポートされていない形式である\n・ファイル名に対応していない文字が含まれている\nのいずれかの可能性があります。最新版の解凍DLLを取得して試してください。"
     IDS_FORMAT_NAME_7Z      "7z"
     IDS_FORMAT_NAME_7Z_PASS "7zパスワード付き"
     IDS_FORMAT_NAME_7Z_PASS_SPLIT "7zパスワード付き分割"
@@ -1258,6 +1226,7 @@ BEGIN
     IDS_ENCRYPTION_AES128   "AES128"
     IDS_ENCRYPTION_AES256   "AES256"
     IDS_ENCRYPTION_AES192   "AES192"
+    IDS_WAITING_FOR_SEMAPHORE "他のファイルの処理が終わるのを待っています"
     IDS_TREE_SEARCH_FOLDER  "検索フォルダ"
     IDS_SEARCH_BY_FILEPATH  "ファイルパス: %s"
     IDS_SEARCH_BY_ORIGINAL_SIZE "圧縮前サイズ: %s"
@@ -1269,7 +1238,6 @@ BEGIN
     IDS_FORMAT_NAME_TAR     "TAR"
     IDS_FORMAT_NAME_TBZ     "TAR+BZip2"
     IDS_FORMAT_NAME_TGZ     "TAR+GZip"
-    IDS_FORMAT_NAME_UUE     "uuencode"
     IDS_SEARCH_BY_MODE      "ファイル種別: %s"
     IDS_COND_FILESIZE_EQUAL "%sちょうど"
     IDS_COND_FILESIZE_EQUAL_OR_GREATER "%s以上"
@@ -1343,18 +1311,9 @@ BEGIN
     IDS_FILELIST_OPENASSOC_DEFAULT_ACCEPT ".*"
     IDS_FILELIST_OPENASSOC_DEFAULT_DENY 
                             ".awk;.bat;.bin;.class;.cmd;.com;.cpl;.dll;.eml;.exe;.folder;.inf;.js;.jse;.lnk;.msc;.msi;.php;.pif;.pl;.reg;.scf;.scr;.sys;.url;.vbe;.vbs;.wsf;.wsh"
-    IDS_CONFIRM_OVERWRITE_MESSAGE_SIMPLE 
-                            "ファイル '%s' :\n既にディスク上に同名ファイルが存在します。\n上書きしますか？"
     IDS_FILELIST_COLUMN_COMPRESSEDSIZE "圧縮後サイズ"
     IDS_FILELIST_COLUMN_RATIO "圧縮率"
     IDS_FILELIST_COLUMN_METHOD "メソッド"
-    IDS_ASK_CONTINUE_EXTRACT 
-                            "ファイル '%s' には不正なパス指定が含まれている可能性があります。無視して解凍を続けますか？"
-    IDS_ERROR_READ_RESPONSEFILE "レスポンスファイルからの読み込みに失敗しました。"
-    IDS_ERROR_INVALID_COMPRESS_PARAMETER "'%s' は不正な圧縮オプションです。"
-    IDS_INPUT_TARGET_FOLDER_WITH_SHIFT 
-                            "出力先フォルダを選択してください。SHIFTキーを押しながらOKを押すと、以降のファイルも同じフォルダに出力します。"
-    IDS_INPUT_FIND_PARAM    "検索条件を入力してください。ワイルドカードに*と?が使えます。"
     IDS_CAPTION_CONFIG_USERCOMMON "LhaForge 設定[全ユーザー共通]"
 END
 
@@ -1371,19 +1330,17 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LOGINFO_OPERATION_EXTRACT "処理内容:ファイルの解凍/結合"
-    IDS_LOGINFO_OPERATION_TESTARCHIVE "処理内容:圧縮ファイルの検査"
+    IDS_LOGINFO_OPERATION_EXTRACT "解凍結果"
+    IDS_LOGINFO_OPERATION_TESTARCHIVE "検査結果"
     IDS_LOGINFO_RESULT      "処理結果"
     IDS_LOGINFO_RESULT_OK   "正常"
     IDS_LOGINFO_RESULT_NG   "問題有り"
-    IDS_LOGINFO_RESULT_ERROR "プログラムエラー"
+    IDS_LOGINFO_OPERATION_COMPRESS "圧縮結果"
     IDS_LOGINFO_RESULT_NOTIMPL "機能無し"
     IDS_LOGINFO_RESULT_NOTARCHIVE "アーカイブではない"
-    IDS_ERROR_UNICODECONTROL "圧縮ファイルにUNICODE制御文字が含まれています。"
+    IDS_ERROR_UNICODECONTROL "アーカイブにUNICODE制御文字が含まれています。"
     IDS_ERROR_USERCANCEL    "ユーザーによるキャンセルがありました"
     IDS_ERROR_FILE_COPY     "ファイルのコピーに失敗しました"
-    IDS_ERROR_FILE_MOVE     "ファイルの移動に失敗しました"
-    IDS_FILTER_ANYFILE      "全てのファイル(*.*)|*.*||"
 END
 
 STRINGTABLE
@@ -1406,13 +1363,11 @@ BEGIN
     IDS_ASK_MOVE_PROCESSED_FILES_TO_RECYCLE_BIN 
                             "処理が完了しました。以下のファイルをごみ箱に移動しますか？\n"
     IDS_ASK_DELETE_PROCESSED_FILE "処理が完了しました。以下のファイルを削除しますか？\n"
-    IDR_CLOSEBUTTON         "閉じる"
     IDS_FORMAT_NAME_XZ      "XZ"
     IDS_FORMAT_NAME_LZMA    "LZMA"
     IDS_FORMAT_NAME_TAR_XZ  "TAR+XZ"
     IDS_FORMAT_NAME_TAR_LZMA "TAR+LZMA"
     IDS_ENCRYPTED_ARCHIVE   "パスワード保護*"
-    IDS_INPUT_TEMP_PATH     "一時フォルダの指定"
     IDS_FORMAT_NAME         "フォーマット名"
     IDS_EXTENSION           "拡張子"
 END
@@ -1428,6 +1383,16 @@ BEGIN
     ID_MENUITEM_EXTRACT_ARCHIVE_AND_CLOSE_ALL 
                             "全てのアーカイブを解凍後、タブを閉じます\n全て解凍して閉じる"
     ID_MENUITEM_EXTRACT_ARCHIVE_ALL "全てのアーカイブを解凍します\n全てのアーカイブを解凍"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_READ_FILE     "ファイル '%s' を読めません"
+    IDS_ERROR_GET_STAT      "ファイル '%s' の属性を取得できません"
+    IDS_ERROR_MKDIR         "フォルダ '%s' を作成できません"
+    IDS_ERROR_UNEXPECTED_EOF "ファイルが途中で終わっています"
+    IDS_ERROR_CHDIR         "フォルダ '%s' に移動できません"
+    IDS_ARCLOG_ABORT        "中止"
 END
 
 #endif    // 日本語 (日本) resources

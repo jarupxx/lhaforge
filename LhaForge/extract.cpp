@@ -451,10 +451,10 @@ std::filesystem::path extractCurrentEntry(
 		if (entry->is_directory()) {
 			try {
 				std::filesystem::create_directories(outputPath);
-				arcLog(outputPath, L"directory created");
+				arcLog(outputPath, UtilLoadString(IDS_ARCLOG_MKDIR));
 			} catch (std::filesystem::filesystem_error&) {
-				arcLog(outputPath, L"failed to create directory");
-				RAISE_EXCEPTION(Format(UtilLoadString(IDS_ERROR_CANNOT_MAKE_DIR), outputPath.c_str()));
+				arcLog(outputPath, UtilLoadString(IDS_ARCLOG_MKDIR_FAIL));
+				RAISE_EXCEPTION(Format(UtilLoadString(IDS_ERROR_MKDIR), outputPath.c_str()));
 			}
 		} else {
 			//overwrite?
@@ -464,7 +464,7 @@ std::filesystem::path extractCurrentEntry(
 				//do nothing, keep going
 				break;
 			case overwrite_options::skip:
-				arcLog(outputPath, L"skipped");
+				arcLog(outputPath, UtilLoadString(IDS_ARCLOG_SKIP));
 				return {};
 			case overwrite_options::abort:
 				//abort
@@ -477,7 +477,7 @@ std::filesystem::path extractCurrentEntry(
 				if (!std::filesystem::exists(parent)) {
 					//in case directory entry is not in archive
 					std::filesystem::create_directories(parent);
-					arcLog(parent, L"directory created");
+					arcLog(parent, UtilLoadString(IDS_ARCLOG_MKDIR));
 				}
 			}
 
@@ -485,8 +485,8 @@ std::filesystem::path extractCurrentEntry(
 			CAutoFile fp;
 			fp.open(outputPath, L"wb");
 			if (!fp.is_opened()) {
-				arcLog(originalPath, L"failed to open for write");
-				RAISE_EXCEPTION(L"Failed to open file %s", outputPath.c_str());
+				arcLog(originalPath, UtilLoadString(IDS_ARCLOG_ERROR_WRITE));
+				RAISE_EXCEPTION(UtilLoadString(IDS_ERROR_OPEN_FILE), outputPath.c_str());
 			}
 			created = true;
 			for (bool bEOF = false;!bEOF;) {
@@ -500,13 +500,13 @@ std::filesystem::path extractCurrentEntry(
 						}
 						auto written = fwrite(buf, 1, (size_t)data_size, fp);
 						if (written != data_size) {
-							RAISE_EXCEPTION(L"Failed to write file %s", outputPath.c_str());
+							RAISE_EXCEPTION(UtilLoadString(IDS_ERROR_WRITE_FILE), outputPath.c_str());
 						}
 						progressHandler.onEntryIO(_ftelli64(fp));
 					}
 				});
 			}
-			arcLog(outputPath, L"OK");
+			arcLog(outputPath, UtilLoadString(IDS_ARCLOG_OK));
 			fp.close();
 		}
 
@@ -710,20 +710,31 @@ bool GUI_extract_multiple_files(
 			try {
 				std::filesystem::create_directories(output_dir);
 			} catch (std::filesystem::filesystem_error&) {
-				RAISE_EXCEPTION(UtilLoadString(IDS_ERROR_CANNOT_MAKE_DIR).c_str(), output_dir.c_str());
+				RAISE_EXCEPTION(UtilLoadString(IDS_ERROR_MKDIR).c_str(), output_dir.c_str());
 			}
+
+
+			logs.resize(logs.size() + 1);
+			ARCLOG& arcLog = logs.back();
+			// record archive filename
+			arcLog.setArchivePath(archive_path);
+			progressHandler.setArchive(archive_path);
 
 			// limit concurrent extractions
 			CSemaphoreLocker SemaphoreLock;
 			if (args.extract.LimitExtractFileCount) {
 				const wchar_t* LHAFORGE_EXTRACT_SEMAPHORE_NAME = L"LhaForgeExtractLimitSemaphore";
-				SemaphoreLock.Lock(LHAFORGE_EXTRACT_SEMAPHORE_NAME, args.extract.MaxExtractFileCount);
+				SemaphoreLock.Create(LHAFORGE_EXTRACT_SEMAPHORE_NAME, args.extract.MaxExtractFileCount);
+				SemaphoreLock.Lock(INFINITE);
+				//Wait for semaphore lock
+				//progress dialog shows waiting message
+				progressHandler.setSpecialMessage(UtilLoadString(IDS_WAITING_FOR_SEMAPHORE));
+				for (; !SemaphoreLock.Lock(20);) {
+					while (UtilDoMessageLoop())continue;
+					progressHandler.poll();	//needed to detect cancel
+					Sleep(20);
+				}
 			}
-
-			logs.resize(logs.size() + 1);
-			ARCLOG &arcLog = logs.back();
-			// record archive filename
-			arcLog.setArchivePath(archive_path);
 
 			CLFOverwriteConfirmGUI preExtractHandler;
 			// loop for each entry
@@ -824,7 +835,7 @@ void testOneArchive(
 
 		try {
 			if (entry->is_directory()) {
-				arcLog(originalPath, L"directory");
+				arcLog(originalPath, UtilLoadString(IDS_ARCLOG_ENTRY_IS_DIR));
 			} else {
 				//go
 				int64_t global_offset = 0;
@@ -842,7 +853,7 @@ void testOneArchive(
 						}
 					});
 				}
-				arcLog(originalPath, L"OK");
+				arcLog(originalPath, UtilLoadString(IDS_ARCLOG_OK));
 			}
 		} catch (const LF_USER_CANCEL_EXCEPTION& e) {
 			arcLog(originalPath, e.what());
@@ -914,20 +925,30 @@ bool GUI_test_multiple_files(
 	}
 
 	UINT64 totalFiles = archive_files.size();
-	//TODO: queue
 	std::vector<ARCLOG> logs;
 	for (const auto &archive_path : archive_files) {
 		try {
+			logs.resize(logs.size() + 1);
+			ARCLOG& arcLog = logs.back();
+			// record archive filename
+			arcLog.setArchivePath(archive_path);
+			progressHandler.setArchive(archive_path);
+
 			const wchar_t* LHAFORGE_EXTRACT_SEMAPHORE_NAME = L"LhaForgeExtractLimitSemaphore";
 			// limit concurrent extractions
 			CSemaphoreLocker SemaphoreLock;
 			if (args.extract.LimitExtractFileCount) {
-				SemaphoreLock.Lock(LHAFORGE_EXTRACT_SEMAPHORE_NAME, args.extract.MaxExtractFileCount);
+				SemaphoreLock.Create(LHAFORGE_EXTRACT_SEMAPHORE_NAME, args.extract.MaxExtractFileCount);
+				SemaphoreLock.Lock(INFINITE);
+				//Wait for semaphore lock
+				//progress dialog shows waiting message
+				progressHandler.setSpecialMessage(UtilLoadString(IDS_WAITING_FOR_SEMAPHORE));
+				for (; !SemaphoreLock.Lock(20);) {
+					while (UtilDoMessageLoop())continue;
+					progressHandler.poll();	//needed to detect cancel
+					Sleep(20);
+				}
 			}
-			logs.resize(logs.size() + 1);
-			ARCLOG &arcLog = logs.back();
-			// record archive filename
-			arcLog.setArchivePath(archive_path);
 			testOneArchive(archive_path, arcLog, progressHandler, std::make_shared<CLFPassphraseGUI>());
 		} catch (const LF_USER_CANCEL_EXCEPTION &e) {
 			ARCLOG &arcLog = logs.back();
